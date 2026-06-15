@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>House360</title>
+<style>
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--sur:#1e1e2e;--bor:rgba(255,255,255,0.08);--txt:#e8e8f0;--txt2:#9090a8;--acc:#6c63ff;--teal:#2dd4bf;--red:#ef4444;--grn:#22c55e;--r:12px}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;height:100dvh;overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:opacity .3s,transform .3s}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(10px)}
+
+/* HOME */
+#home{align-items:center;justify-content:center;gap:18px;padding:32px}
+.logo{font-size:40px;font-weight:800;letter-spacing:-2px;background:linear-gradient(135deg,#6c63ff,#2dd4bf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tagline{font-size:13px;color:var(--txt2);text-align:center;max-width:240px;line-height:1.5}
+.home-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;margin-top:8px}
+.bp{background:var(--acc);color:#fff;border:none;border-radius:var(--r);padding:15px 24px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .1s}
+.bp:active{transform:scale(.97)}
+.bp.teal{background:var(--teal);color:#0a0a0f}
+.bp.sm{padding:12px 20px;font-size:14px}
+.bp:disabled{opacity:.4;cursor:default}
+.bs{background:var(--sur);color:var(--txt);border:1px solid var(--bor);border-radius:var(--r);padding:13px 24px;font-size:15px;font-weight:500;cursor:pointer}
+
+/* TOPBAR */
+.top-bar{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--bor);background:var(--bg2);flex-shrink:0}
+.top-bar h2{font-size:17px;font-weight:600;flex:1}
+.ib{background:var(--sur);border:1px solid var(--bor);color:var(--txt);border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+
+/* CAPTURE (rooms) */
+#capture{background:var(--bg)}
+.cap-body{flex:1;overflow-y:auto}
+.sec{padding:16px 18px;border-bottom:1px solid var(--bor)}
+.sec label{font-size:12px;color:var(--txt2);display:block;margin-bottom:5px}
+.inp{background:var(--sur);border:1px solid var(--bor);border-radius:8px;color:var(--txt);font-size:15px;padding:10px 13px;width:100%;outline:none}
+.inp:focus{border-color:var(--acc)}
+.room-list{padding:14px 18px;flex:1}
+.room-list h3{font-size:12px;color:var(--txt2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.room-item{background:var(--sur);border:1px solid var(--bor);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.rthumb{width:52px;height:40px;border-radius:6px;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.rthumb img{width:100%;height:100%;object-fit:cover}
+.rinfo{flex:1}
+.rname{font-size:14px;font-weight:500}
+.rmeta{font-size:11px;color:var(--txt2);margin-top:2px}
+.rdot{width:7px;height:7px;border-radius:50%;background:var(--grn);flex-shrink:0}
+.rdot.p{background:var(--txt2)}
+.add-btn{width:100%;background:transparent;border:1.5px dashed var(--bor);border-radius:var(--r);padding:14px;color:var(--txt2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px}
+.add-btn:hover{border-color:var(--acc);color:var(--acc)}
+.cap-foot{padding:16px 18px;background:var(--bg2);border-top:1px solid var(--bor);display:flex;gap:10px;flex-shrink:0}
+
+/* SCAN GUIDE */
+#scan-guide{background:#000;position:relative}
+#scan-video{width:100%;flex:1;object-fit:cover;background:#000}
+.guide-overlay{position:absolute;inset:0;pointer-events:none}
+.vf-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);width:200px;height:200px;border-radius:50%;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
+.vf-cross{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%)}
+.vf-cross::before,.vf-cross::after{content:'';position:absolute;background:rgba(255,255,255,.5)}
+.vf-cross::before{width:1px;height:40px;left:0;top:-20px}
+.vf-cross::after{width:40px;height:1px;left:-20px;top:0}
+.shot-dots{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.25);transition:background .3s,transform .2s}
+.dot.done{background:var(--grn)}
+.dot.current{background:#fff;transform:scale(1.3)}
+.scan-inst{position:absolute;bottom:0;left:0;right:0;padding:20px 20px 40px;background:linear-gradient(transparent,rgba(0,0,0,.9));text-align:center}
+.scan-inst .step-name{font-size:18px;font-weight:700;color:#fff;margin-bottom:6px}
+.scan-inst .step-desc{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:16px}
+.scan-inst .hint{font-size:12px;color:rgba(255,255,255,.5);margin-top:8px}
+.gyro-bar{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;margin-top:110px}
+.gyro-arc{width:120px;height:8px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden}
+.gyro-fill{height:100%;border-radius:4px;background:var(--teal);transition:width .1s}
+.gyro-label{font-size:11px;color:rgba(255,255,255,.6)}
+.cap-btn{width:68px;height:68px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.3);cursor:pointer;margin:0 auto;transition:transform .1s;flex-shrink:0}
+.cap-btn:active{transform:scale(.9)}
+.cap-btn.ready{background:var(--teal)}
+.cap-btn.auto{background:var(--acc);animation:pulse-cap 1s ease-in-out infinite}
+@keyframes pulse-cap{0%,100%{box-shadow:0 0 0 0 rgba(108,99,255,.5)}50%{box-shadow:0 0 0 12px rgba(108,99,255,0)}}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .05s}
+.flash.go{opacity:1}
+.vtop{position:absolute;top:0;left:0;right:0;padding:14px 18px;display:flex;align-items:center;gap:12px;background:linear-gradient(rgba(0,0,0,.7),transparent)}
+.ibw{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* MANUAL CAPTURE */
+#manual-cap{background:#000;position:relative}
+#manual-video{width:100%;flex:1;object-fit:cover;background:#000}
+.thumb-strip{display:flex;gap:6px;overflow-x:auto;max-width:260px;padding:2px}
+.thumb-strip img{width:46px;height:34px;object-fit:cover;border-radius:5px;border:1px solid rgba(255,255,255,.3);flex-shrink:0}
+.manual-foot{position:absolute;bottom:0;left:0;right:0;padding:18px 20px 36px;background:linear-gradient(transparent,rgba(0,0,0,.9));display:flex;flex-direction:column;align-items:center;gap:12px}
+.manual-row{display:flex;align-items:center;gap:24px}
+
+/* VIDEO SWEEP */
+#video-sweep{background:#000;position:relative}
+#sweep-video{width:100%;flex:1;object-fit:cover;background:#000}
+.sweep-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);width:200px;height:200px;border-radius:50%;border:2px dashed rgba(255,255,255,.3)}
+.sweep-rotator{position:absolute;inset:0;transition:transform .08s linear}
+.sweep-dot-inner{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal)}
+.rec-btn{width:72px;height:72px;border-radius:50%;background:var(--red);border:4px solid rgba(255,255,255,.3);cursor:pointer;position:relative;transition:transform .1s;flex-shrink:0}
+.rec-btn:active{transform:scale(.93)}
+.rec-btn.recording{animation:pulse-rec 1.2s ease-in-out infinite}
+@keyframes pulse-rec{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 14px rgba(239,68,68,0)}}
+.rec-btn::after{content:'';position:absolute;inset:22px;background:#fff;border-radius:50%}
+.rec-btn.recording::after{inset:18px;border-radius:4px}
+.rec-timer{color:#fff;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;text-align:center}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:blink 1s step-start infinite;display:inline-block;margin-right:6px}
+@keyframes blink{50%{opacity:0}}
+
+/* STITCH */
+#stitch-screen{background:#000;align-items:center;justify-content:center;gap:20px;padding:32px}
+.stitch-icon{font-size:56px;animation:spin 2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stitch-title{color:#fff;font-size:20px;font-weight:700;text-align:center}
+.stitch-sub{color:rgba(255,255,255,.6);font-size:14px;text-align:center}
+.stitch-bar-bg{width:100%;max-width:280px;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.stitch-bar{height:100%;background:var(--teal);border-radius:3px;transition:width .3s}
+
+/* VIEWER 360 */
+#viewer{background:#000;position:relative}
+#three-canvas{width:100%!important;height:100%!important;display:block;touch-action:none}
+#hotspots-layer{position:absolute;inset:0;pointer-events:none}
+.viewer-bot{position:absolute;bottom:0;left:0;right:0;padding:16px 18px 36px;background:linear-gradient(transparent,rgba(0,0,0,.9))}
+.vtitle{color:#fff;font-size:17px;font-weight:700;margin-bottom:10px}
+.room-nav{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px}
+.room-nav::-webkit-scrollbar,.tgrid::-webkit-scrollbar{display:none}
+.npill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:7px 14px;color:#fff;font-size:12px;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.npill.active{background:var(--acc);border-color:var(--acc);font-weight:600}
+.hotspot{position:absolute;width:42px;height:42px;border-radius:50%;background:rgba(108,99,255,.85);border:2px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transform:translate(-50%,-50%);animation:hpulse 2s ease-in-out infinite;pointer-events:auto}
+@keyframes hpulse{0%,100%{box-shadow:0 0 0 0 rgba(108,99,255,.5)}50%{box-shadow:0 0 0 10px rgba(108,99,255,0)}}
+.hlabel{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;color:#fff;background:rgba(0,0,0,.6);border-radius:4px;padding:2px 6px;pointer-events:none}
+.gyro-hint{position:absolute;top:58px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:7px 14px;color:rgba(255,255,255,.85);font-size:12px;white-space:nowrap;transition:opacity .5s;pointer-events:none}
+.gyro-hint.fade{opacity:0}
+
+/* TOUR LIST */
+#tour-list{background:var(--bg)}
+.tgrid{padding:14px 18px;flex:1;overflow-y:auto}
+.tcard{background:var(--sur);border:1px solid var(--bor);border-radius:var(--r);margin-bottom:10px;overflow:hidden;cursor:pointer;transition:border-color .2s}
+.tcard:hover{border-color:var(--acc)}
+.tthumb{width:100%;height:110px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:36px;position:relative}
+.tthumb img{width:100%;height:110px;object-fit:cover}
+.tbadge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border-radius:6px;padding:3px 8px;font-size:11px;color:#fff}
+.tinfo{padding:10px 13px}
+.tname{font-size:15px;font-weight:600}
+.tmeta{font-size:11px;color:var(--txt2);margin-top:3px}
+.empty{text-align:center;padding:50px 20px}
+.empty-icon{font-size:52px;margin-bottom:14px}
+
+/* MODAL */
+.modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.75);z-index:100;display:flex;align-items:flex-end;transition:opacity .25s}
+.modal-bg.hidden{opacity:0;pointer-events:none}
+.modal{background:var(--bg2);border-radius:20px 20px 0 0;padding:22px 18px 38px;width:100%;border-top:1px solid var(--bor);max-height:85vh;overflow-y:auto}
+.modal h3{font-size:17px;font-weight:700;margin-bottom:4px}
+.modal .sub{font-size:12px;color:var(--txt2);margin-bottom:14px}
+.mbtns{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.mode-btn{display:flex;align-items:center;gap:12px;text-align:left}
+.mode-btn .mi{font-size:22px;flex-shrink:0}
+.mode-btn .mt{display:flex;flex-direction:column;gap:2px}
+.mode-btn .mtitle{font-size:14px;font-weight:600}
+.mode-btn .mdesc{font-size:11px;opacity:.75;font-weight:400}
+
+/* VIDEO TOUR CAPTURE */
+#vt-capture{background:#000;position:relative}
+#vt-video{width:100%;flex:1;object-fit:cover;background:#000}
+.vt-bottom{position:absolute;bottom:0;left:0;right:0;padding:16px 18px 36px;background:linear-gradient(transparent,rgba(0,0,0,.9));display:flex;flex-direction:column;gap:12px;align-items:center}
+.vt-chapters{display:flex;gap:6px;overflow-x:auto;width:100%;padding-bottom:2px}
+.vt-chapters::-webkit-scrollbar{display:none}
+.vt-chip{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:5px 11px;color:#fff;font-size:11px;white-space:nowrap;flex-shrink:0}
+.vt-controls{display:flex;align-items:center;gap:24px}
+.vt-mark-btn{background:var(--teal);color:#0a0a0f;border:none;border-radius:24px;padding:13px 22px;font-size:14px;font-weight:700;cursor:pointer}
+.vt-mark-btn:disabled{opacity:.35}
+.vt-mark-input{position:absolute;bottom:140px;left:18px;right:18px;background:var(--sur);border:1px solid var(--bor);border-radius:var(--r);padding:14px;display:flex;gap:8px;z-index:5}
+
+/* VIDEO PLAYER (viewer for video tours) */
+#video-player{background:#000;position:relative}
+#vp-video{width:100%;height:100%;object-fit:contain;background:#000}
+.vp-bottom{position:absolute;bottom:0;left:0;right:0;padding:16px 18px 36px;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+.vp-chapters{display:flex;gap:7px;overflow-x:auto;margin-top:10px}
+.vp-chapters::-webkit-scrollbar{display:none}
+.vp-pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:7px 14px;color:#fff;font-size:12px;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.vp-pill.active{background:var(--acc);border-color:var(--acc);font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen">
+  <div class="logo">House360</div>
+  <div class="tagline">Escanea tu casa con el teléfono y recórrela en 360°</div>
+  <div class="home-btns">
+    <button class="bp" onclick="openTourTypeModal()">📷 Nuevo recorrido</button>
+    <button class="bp teal" onclick="showScreen('tour-list')">🏠 Mis recorridos</button>
+    <button class="bs" onclick="loadDemo()">▶ Ver demo</button>
+    <button class="bs" onclick="testCamera()" style="font-size:13px;padding:10px">🔍 Probar cámara</button>
+  </div>
+  <div id="https-warning" style="display:none;background:#2a1a0a;border:1px solid #f59e0b;border-radius:10px;padding:10px 14px;font-size:12px;color:#fbbf24;text-align:center;max-width:320px;line-height:1.5;margin-top:4px">
+    ⚠️ Abre esta app desde un servidor HTTPS para usar la cámara. Por ahora puedes usar <b>Importar foto 360°</b> o <b>Habitación demo</b>.
+  </div>
+  <div style="font-size:12px;color:var(--txt2);margin-top:4px" id="hcount">0 recorridos guardados</div>
+</div>
+
+<!-- TOUR TYPE MODAL -->
+<div class="modal-bg hidden" id="tour-type-modal">
+  <div class="modal">
+    <h3>¿Qué tipo de recorrido?</h3>
+    <div class="sub">Elige cómo quieres capturar tu casa</div>
+    <div class="mbtns">
+      <button class="bp mode-btn" onclick="closeModal('tour-type-modal');showScreen('capture')">
+        <span class="mi">🧭</span>
+        <span class="mt"><span class="mtitle">Por habitaciones (360°)</span><span class="mdesc">Cada habitación es una esfera navegable</span></span>
+      </button>
+      <button class="bp mode-btn" style="background:var(--bg3);color:var(--txt)" onclick="closeModal('tour-type-modal');startVideoTour()">
+        <span class="mi">🎬</span>
+        <span class="mt"><span class="mtitle">Video continuo</span><span class="mdesc">Graba caminando y marca habitaciones</span></span>
+      </button>
+      <button class="bs" onclick="closeModal('tour-type-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CAPTURE (rooms list) -->
+<div id="capture" class="screen hidden">
+  <div class="top-bar">
+    <button class="ib" onclick="showScreen('home')">←</button>
+    <h2>Nuevo recorrido</h2>
+    <button class="ib" onclick="saveTour()">💾</button>
+  </div>
+  <div class="cap-body">
+    <div class="sec">
+      <label>Nombre del recorrido</label>
+      <input class="inp" id="tour-name" placeholder="Ej: Casa Loreto 240">
+    </div>
+    <div class="room-list">
+      <h3>Habitaciones (<span id="rcount">0</span>)</h3>
+      <div id="rooms-container"></div>
+      <button class="add-btn" onclick="showCaptureModeModal()">＋ Agregar habitación</button>
+    </div>
+  </div>
+  <div class="cap-foot">
+    <button class="bp" style="flex:1" onclick="saveTour()">💾 Guardar recorrido</button>
+  </div>
+</div>
+
+<!-- MODAL: CAPTURE MODE -->
+<div class="modal-bg hidden" id="mode-modal">
+  <div class="modal">
+    <h3>Nueva habitación</h3>
+    <label style="font-size:12px;color:var(--txt2);display:block;margin-bottom:5px">Nombre</label>
+    <input class="inp" id="room-name-input" placeholder="Ej: Sala de estar">
+    <div class="mbtns">
+      <button class="bp mode-btn" onclick="startScan(8)">
+        <span class="mi">🔄</span><span class="mt"><span class="mtitle">Escaneo guiado (8 fotos)</span><span class="mdesc">Mayor calidad — gira 45° por toma</span></span>
+      </button>
+      <button class="bp mode-btn" style="background:var(--bg3);color:var(--txt)" onclick="startScan(4)">
+        <span class="mi">⚡</span><span class="mt"><span class="mtitle">Captura rápida (4 fotos)</span><span class="mdesc">Más veloz — gira 90° por toma</span></span>
+      </button>
+      <button class="bp mode-btn" style="background:var(--bg3);color:var(--txt)" onclick="startManualCapture()">
+        <span class="mi">✋</span><span class="mt"><span class="mtitle">Captura manual</span><span class="mdesc">Sin guía — tú decides cuántas fotos</span></span>
+      </button>
+      <button class="bp mode-btn" style="background:var(--bg3);color:var(--txt)" onclick="startVideoSweep()">
+        <span class="mi">🎥</span><span class="mt"><span class="mtitle">Video panorámico</span><span class="mdesc">Graba girando y extrae el panorama</span></span>
+      </button>
+      <button class="bp mode-btn" style="background:var(--bg3);color:var(--txt)" onclick="document.getElementById('img-input').click()">
+        <span class="mi">🖼</span><span class="mt"><span class="mtitle">Importar foto 360°</span><span class="mdesc">De cámara Ricoh, Insta360, etc.</span></span>
+      </button>
+      <button class="bp mode-btn" style="background:var(--bg3);color:var(--txt)" onclick="useDemoRoom()">
+        <span class="mi">✨</span><span class="mt"><span class="mtitle">Habitación demo</span><span class="mdesc">Para probar la app sin cámara</span></span>
+      </button>
+      <button class="bs" onclick="closeModal('mode-modal')">Cancelar</button>
+    </div>
+    <input type="file" id="img-input" accept="image/*" style="display:none" onchange="roomFromFile(event)">
+  </div>
+</div>
+
+<!-- SCAN GUIDE -->
+<div id="scan-guide" class="screen hidden">
+  <video id="scan-video" autoplay muted playsinline></video>
+  <div class="guide-overlay">
+    <div class="shot-dots" id="shot-dots"></div>
+    <div class="vf-ring"></div>
+    <div class="vf-cross"></div>
+    <div class="gyro-bar">
+      <div class="gyro-arc"><div class="gyro-fill" id="gyro-fill" style="width:0%"></div></div>
+      <div class="gyro-label" id="gyro-label">Gira el teléfono →</div>
+    </div>
+    <div class="flash" id="flash"></div>
+  </div>
+  <div class="scan-inst">
+    <div class="step-name" id="step-name">Preparado</div>
+    <div class="step-desc" id="step-desc">Apunta al centro de la habitación</div>
+    <button class="cap-btn" id="cap-btn" onclick="captureShot()"></button>
+    <div class="hint" id="step-hint">Toca para tomar la primera foto</div>
+  </div>
+  <div class="vtop">
+    <button class="ibw" onclick="cancelScan()">✕</button>
+    <span style="color:#fff;font-size:14px;font-weight:600" id="scan-title">Escaneo 360°</span>
+    <span style="margin-left:auto;color:rgba(255,255,255,.7);font-size:12px" id="shot-counter">0/8</span>
+  </div>
+</div>
+
+<!-- MANUAL CAPTURE -->
+<div id="manual-cap" class="screen hidden">
+  <video id="manual-video" autoplay muted playsinline></video>
+  <div class="vtop">
+    <button class="ibw" onclick="cancelManual()">✕</button>
+    <span style="color:#fff;font-size:14px;font-weight:600">Captura manual</span>
+    <span style="margin-left:auto;color:rgba(255,255,255,.7);font-size:12px" id="manual-counter">0 fotos</span>
+  </div>
+  <div class="guide-overlay">
+    <div class="vf-ring"></div>
+    <div class="vf-cross"></div>
+    <div class="flash" id="manual-flash"></div>
+  </div>
+  <div class="manual-foot">
+    <div class="thumb-strip" id="manual-thumbs"></div>
+    <div style="color:rgba(255,255,255,.6);font-size:12px;text-align:center">Toma fotos girando lentamente alrededor de la habitación</div>
+    <div class="manual-row">
+      <button class="cap-btn" onclick="captureManualShot()"></button>
+      <button class="bp teal sm" id="manual-finish" onclick="finishManual()" disabled>✓ Finalizar (mín. 3)</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO SWEEP -->
+<div id="video-sweep" class="screen hidden">
+  <video id="sweep-video" autoplay muted playsinline></video>
+  <div class="vtop">
+    <button class="ibw" onclick="cancelSweep()">✕</button>
+    <span style="color:#fff;font-size:14px;font-weight:600">Video panorámico</span>
+    <span style="margin-left:auto" id="sweep-rec-ind"></span>
+  </div>
+  <div class="guide-overlay">
+    <div class="sweep-ring">
+      <div class="sweep-rotator" id="sweep-rotator"><div class="sweep-dot-inner"></div></div>
+    </div>
+    <div class="flash" id="sweep-flash"></div>
+  </div>
+  <div class="manual-foot">
+    <div class="rec-timer" id="sweep-timer">00:00</div>
+    <div style="color:rgba(255,255,255,.6);font-size:12px;text-align:center" id="sweep-hint">Toca grabar y gira lentamente 360° en tu lugar</div>
+    <button class="rec-btn" id="sweep-rec-btn" onclick="toggleSweep()"></button>
+  </div>
+</div>
+
+<!-- STITCH -->
+<div id="stitch-screen" class="screen hidden">
+  <div class="stitch-icon">🔄</div>
+  <div class="stitch-title">Creando panorama 360°</div>
+  <div class="stitch-sub" id="stitch-sub">Procesando...</div>
+  <div class="stitch-bar-bg"><div class="stitch-bar" id="stitch-bar" style="width:0%"></div></div>
+</div>
+
+<!-- VIEWER 360 -->
+<div id="viewer" class="screen hidden">
+  <canvas id="three-canvas"></canvas>
+  <div id="hotspots-layer"></div>
+  <div class="vtop">
+    <button class="ibw" onclick="showScreen('tour-list')">←</button>
+    <h2 id="viewer-title" style="color:#fff;font-size:16px;font-weight:600;flex:1">Sala</h2>
+    <button class="ibw" onclick="toggleGyro()" id="gyro-btn" title="Giroscopio">📱</button>
+    <button class="ibw" onclick="toggleFullscreen()">⛶</button>
+  </div>
+  <div class="gyro-hint" id="gyro-hint">📱 Mueve el teléfono para mirar</div>
+  <div class="viewer-bot">
+    <div class="vtitle" id="viewer-tour-name">Mi Casa</div>
+    <div class="room-nav" id="room-nav"></div>
+  </div>
+</div>
+
+<!-- VIDEO TOUR CAPTURE -->
+<div id="vt-capture" class="screen hidden">
+  <video id="vt-video" autoplay muted playsinline></video>
+  <div class="vtop">
+    <button class="ibw" onclick="cancelVideoTour()">✕</button>
+    <span style="color:#fff;font-size:14px;font-weight:600">Recorrido en video</span>
+    <span style="margin-left:auto" id="vt-rec-ind"></span>
+  </div>
+  <div class="vt-mark-input hidden" id="vt-mark-input">
+    <input class="inp" id="vt-chapter-name" placeholder="Ej: Cocina">
+    <button class="bp sm" style="width:auto" onclick="confirmChapter()">✓</button>
+  </div>
+  <div class="vt-bottom">
+    <div class="vt-chapters" id="vt-chapters"></div>
+    <div class="rec-timer" id="vt-timer">00:00</div>
+    <div class="vt-controls">
+      <button class="vt-mark-btn" id="vt-mark-btn" onclick="markChapter()" disabled>📍 Marcar habitación</button>
+      <button class="rec-btn" id="vt-rec-btn" onclick="toggleVideoTour()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO PLAYER (viewer for video tours) -->
+<div id="video-player" class="screen hidden">
+  <video id="vp-video" playsinline controls></video>
+  <div class="vtop">
+    <button class="ibw" onclick="showScreen('tour-list')">←</button>
+    <h2 id="vp-title" style="color:#fff;font-size:16px;font-weight:600;flex:1">Recorrido</h2>
+  </div>
+  <div class="vp-bottom">
+    <div class="vp-chapters" id="vp-chapters"></div>
+  </div>
+</div>
+
+<!-- TOUR LIST -->
+<div id="tour-list" class="screen hidden">
+  <div class="top-bar">
+    <button class="ib" onclick="showScreen('home')">←</button>
+    <h2>Mis recorridos</h2>
+  </div>
+  <div class="tgrid" id="tour-grid"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ════════════════ STATE ════════════════
+let tours = JSON.parse(localStorage.getItem('h360_tours')||'[]');
+let rooms = [];
+let currentTour = null;
+let currentRoomIdx = 0;
+
+// Generic capture
+let shots = [];
+let currentShot = 0;
+let TOTAL_SHOTS = 8;
+let ANGLE_STEP = 45;
+
+// Camera streams
+let activeStream = null;
+
+// Gyro tracking for capture
+let gyroTrackHandler = null;
+let gyroBase = null;
+
+// MediaRecorder
+let mediaRecorder = null;
+let recChunks = [];
+let recTimerInt = null;
+let recSeconds = 0;
+let isRecording = false;
+
+// Sweep angle log
+let sweepAngleLog = [];
+let sweepStartTime = 0;
+let sweepCumulative = 0;
+let sweepLastAlpha = null;
+
+// Video tour
+let vtChunks = [];
+let vtChapters = [];
+let vtStartTime = 0;
+let vtRecording = false;
+
+// Three.js viewer
+let renderer, scene, camera, rafId;
+let phi = Math.PI/2, theta = 0;
+let isDragging = false, prevMouse = {};
+let useGyroViewer = false;
+let gyroPhi = Math.PI/2, gyroTheta = 0;
+
+// ════════════════ INDEXEDDB (video storage) ════════════════
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open('house360db',1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('videos');
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e);
+  });
+}
+function saveVideoBlob(id,blob){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction('videos','readwrite');
+    tx.objectStore('videos').put(blob,id);
+    tx.oncomplete=()=>res();
+    tx.onerror=()=>rej();
+  }));
+}
+function loadVideoBlob(id){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction('videos','readonly');
+    const r=tx.objectStore('videos').get(id);
+    r.onsuccess=()=>res(r.result);
+    r.onerror=()=>rej();
+  }));
+}
+
+// ════════════════ DEMO PANORAMAS ════════════════
+const DEMO_PALETTES=[
+  ['#1a0a3a','#2d1b5e','#0d1f3c','#080f1a'],
+  ['#2a1000','#4a2000','#1a0800','#0f0400'],
+  ['#081520','#102030','#051018','#030810'],
+  ['#001520','#002535','#000f18','#000810'],
+];
+const DEMO_NAMES=['Sala de estar','Cocina','Dormitorio','Baño'];
+const DEMO_EMOJIS=['🛋️','🍳','🛏️','🚿'];
+
+function makeDemoPano(pal,w=1600,h=800){
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const ctx=c.getContext('2d');
+  const g=ctx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0,pal[0]);g.addColorStop(.45,pal[1]);g.addColorStop(.7,pal[2]);g.addColorStop(1,pal[3]);
+  ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(0,h*.62,w,h*.38);
+  for(let i=0;i<8;i++){
+    const x=(i/8)*w;
+    ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();
+  }
+  for(let i=0;i<3;i++){
+    const wx=(i/3+.12)*w;
+    const wg=ctx.createRadialGradient(wx+w*.06,h*.3,0,wx+w*.06,h*.3,w*.18);
+    wg.addColorStop(0,'rgba(220,240,255,.14)');wg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=wg;ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(200,220,255,.1)';
+    ctx.fillRect(wx,h*.12,w*.1,h*.32);
+  }
+  ctx.fillStyle='rgba(0,0,0,.4)';
+  ctx.fillRect(w*.08,h*.62-h*.13,w*.2,h*.13);
+  ctx.fillRect(w*.42,h*.62-h*.07,w*.14,h*.07);
+  ctx.fillRect(w*.68,h*.62-h*.15,w*.22,h*.15);
+  ctx.fillStyle='rgba(255,255,255,.45)';
+  for(let i=0;i<50;i++){
+    ctx.beginPath();
+    ctx.arc(Math.random()*w,Math.random()*h*.35,Math.random()*1.5+.3,0,Math.PI*2);
+    ctx.fill();
+  }
+  return c.toDataURL('image/jpeg',.8);
+}
+
+// ════════════════ SCREEN NAV ════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if(id==='home') updateHomeCount();
+  if(id==='tour-list') renderTourList();
+  if(id!=='viewer') stopViewer();
+  if(id!=='scan-guide') stopScanCamera();
+  if(id!=='manual-cap') stopManualCamera();
+  if(id!=='video-sweep') stopSweepCamera();
+  if(id!=='vt-capture') stopVtCamera();
+  if(id!=='video-player'){const vp=document.getElementById('vp-video');vp.pause();vp.src='';}
+}
+function updateHomeCount(){
+  document.getElementById('hcount').textContent=
+    tours.length===0?'0 recorridos guardados':
+    tours.length===1?'1 recorrido guardado':`${tours.length} recorridos guardados`;
+}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function openTourTypeModal(){document.getElementById('tour-type-modal').classList.remove('hidden');}
+
+// ════════════════ ROOMS (rooms-based tour) ════════════════
+function showCaptureModeModal(){
+  document.getElementById('room-name-input').value='';
+  document.getElementById('mode-modal').classList.remove('hidden');
+}
+function addRoom(r){rooms.push(r);renderRooms();}
+function renderRooms(){
+  document.getElementById('rcount').textContent=rooms.length;
+  document.getElementById('rooms-container').innerHTML=rooms.map((r,i)=>`
+    <div class="room-item">
+      <div class="rthumb">${r.pano?`<img src="${r.pano}">`:(r.emoji||'🏠')}</div>
+      <div class="rinfo">
+        <div class="rname">${r.name}</div>
+        <div class="rmeta">${r.sourceLabel||(r.isDemo?'Demo':'Sin imagen')}</div>
+      </div>
+      <div class="rdot ${r.pano?'':'p'}"></div>
+      <button onclick="deleteRoom(${i})" style="background:none;border:none;color:var(--txt2);font-size:16px;cursor:pointer;padding:4px">✕</button>
+    </div>`).join('');
+}
+function deleteRoom(i){rooms.splice(i,1);renderRooms();}
+
+function useDemoRoom(){
+  closeModal('mode-modal');
+  const idx=rooms.length%4;
+  const name=document.getElementById('room-name-input').value.trim()||DEMO_NAMES[idx];
+  addRoom({name,pano:makeDemoPano(DEMO_PALETTES[idx]),emoji:DEMO_EMOJIS[idx],hotspots:[],isDemo:true,sourceLabel:'Demo'});
+}
+function roomFromFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    addRoom({name:document.getElementById('room-name-input').value.trim()||file.name.replace(/\.\w+$/,''),pano:ev.target.result,emoji:'📸',hotspots:[],sourceLabel:'Foto importada'});
+    closeModal('mode-modal');
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
+
+// ════════════════ SAVE / LIST TOURS ════════════════
+function saveTour(){
+  const name=document.getElementById('tour-name').value.trim()||'Mi Casa';
+  if(rooms.length===0){alert('Agrega al menos una habitación.');return;}
+  const tour={id:Date.now(),type:'rooms',name,rooms:rooms.map(r=>({...r})),date:new Date().toLocaleDateString('es-CL'),thumb:rooms[0]?.pano||null};
+  tours.unshift(tour);
+  persistTours();
+  rooms=[];renderRooms();
+  document.getElementById('tour-name').value='';
+  showScreen('tour-list');
+}
+function persistTours(){
+  try{ localStorage.setItem('h360_tours',JSON.stringify(tours)); }
+  catch(e){ alert('No se pudo guardar: almacenamiento lleno. Borra recorridos antiguos.'); }
+}
+function renderTourList(){
+  const g=document.getElementById('tour-grid');
+  if(!tours.length){g.innerHTML=`<div class="empty"><div class="empty-icon">🏠</div><p style="font-size:17px;font-weight:600;margin-bottom:8px">Sin recorridos</p><p style="font-size:13px;color:var(--txt2)">Crea tu primer recorrido tocando "Nuevo recorrido"</p></div>`;return;}
+  g.innerHTML=tours.map((t,i)=>`
+    <div class="tcard" onclick="openTour(${i})">
+      <div class="tthumb">${t.thumb?`<img src="${t.thumb}">`:'🏠'}<div class="tbadge">${t.type==='video'?'🎬 Video':'🧭 360°'}</div></div>
+      <div class="tinfo"><div class="tname">${t.name}</div><div class="tmeta">${t.type==='video'?(t.chapters.length+' habitaciones marcadas'):(t.rooms.length+' habitaciones')} · ${t.date}</div></div>
+    </div>`).join('');
+}
+function openTour(i){
+  const t=tours[i];
+  if(t.type==='video'){ openVideoTour(t); }
+  else { currentTour=t; startViewer(t.rooms,0,t.name); }
+}
+function loadDemo(){
+  const dr=DEMO_NAMES.map((n,i)=>({
+    name:n,pano:makeDemoPano(DEMO_PALETTES[i]),emoji:DEMO_EMOJIS[i],
+    hotspots:i<3?[{yaw:60+i*20,pitch:-5,label:`Ir a ${DEMO_NAMES[i+1]}`,target:i+1}]:[],
+    isDemo:true
+  }));
+  currentTour={name:'Casa Demo',rooms:dr};
+  startViewer(dr,0,'Casa Demo');
+}
+
+// ════════════════ GYRO HELPERS ════════════════
+function requestGyroPermission(cb){
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+    DeviceOrientationEvent.requestPermission().then(r=>cb(r==='granted')).catch(()=>cb(false));
+  } else if('DeviceOrientationEvent' in window){ cb(true); } else { cb(false); }
+}
+
+// ════════════════ CAMERA HELPER ════════════════
+function getCameraStream(constraints){
+  return navigator.mediaDevices.getUserMedia(constraints)
+    .catch(()=>{
+      return navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    })
+    .catch(()=>{
+      return navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    });
+}
+
+function attachStream(videoEl, stream){
+  videoEl.srcObject = stream;
+  videoEl.setAttribute('autoplay','');
+  videoEl.setAttribute('muted','');
+  videoEl.setAttribute('playsinline','');
+  // Force play — needed on Samsung/Android Chrome
+  const tryPlay = () => {
+    const p = videoEl.play();
+    if(p !== undefined) p.catch(()=>{});
+  };
+  if(videoEl.readyState >= 2){ tryPlay(); }
+  else { videoEl.onloadedmetadata = () => { tryPlay(); videoEl.onloadedmetadata = null; }; }
+}
+
+function showCameraError(err){
+  let msg = '📷 No se pudo acceder a la cámara.\n\n';
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    msg += 'Tu navegador no soporta acceso a la cámara. Abre la app en Chrome o Safari actualizado.';
+  } else if(location.protocol === 'file:'){
+    msg += 'La app necesita abrirse desde un servidor web (HTTPS) para usar la cámara.\n\nSolución rápida: abre el archivo desde un servidor local o sube la app a una página web.\n\nPor ahora usa "Importar foto 360°" o "Habitación demo".';
+  } else if(err && (err.name==='NotAllowedError'||err.name==='PermissionDeniedError')){
+    msg += 'Permiso de cámara denegado.\n\n✅ Ve a Ajustes → Safari/Chrome → Cámara → Permitir, luego recarga la página.';
+  } else if(err && err.name==='NotFoundError'){
+    msg += 'No se encontró ninguna cámara en este dispositivo.';
+  } else {
+    msg += 'Error: '+(err?err.message:'desconocido')+'\n\nIntenta recargar la página o usar "Importar foto 360°".';
+  }
+  alert(msg);
+}
+
+// ════════════════ SCAN GUIDE (guided / quick) ════════════════
+function startScan(n){
+  TOTAL_SHOTS=n; ANGLE_STEP=360/n;
+  const name=document.getElementById('room-name-input').value.trim()||`Habitación ${rooms.length+1}`;
+  window._pendingRoomName=name;
+  window._pendingSource=n===8?'Escaneo guiado (8 fotos)':'Captura rápida (4 fotos)';
+  closeModal('mode-modal');
+  shots=[];currentShot=0;
+  getCameraStream({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},audio:false})
+    .then(stream=>{
+      activeStream=stream;
+      buildShotDots();
+      updateScanStep();
+      showScreen('scan-guide');
+      // Attach AFTER screen is visible — fixes black screen on Samsung
+      setTimeout(()=>{ attachStream(document.getElementById('scan-video'), stream); }, 80);
+      requestGyroPermission(ok=>{ if(ok) startScanGyro(); });
+    })
+    .catch(err=>showCameraError(err));
+}
+function buildShotDots(){
+  document.getElementById('shot-dots').innerHTML=Array.from({length:TOTAL_SHOTS},(_,i)=>`<div class="dot" id="dot${i}"></div>`).join('');
+}
+function updateScanStep(){
+  const half=Math.floor(TOTAL_SHOTS/2);
+  let name,desc;
+  if(currentShot===0){name='Frente';desc='Apunta al centro de la habitación';}
+  else if(currentShot===half){name='Detrás';desc='Ahora mira hacia el lado contrario';}
+  else if(currentShot<half){name=`Giro ${currentShot}`;desc=`Gira ${Math.round(ANGLE_STEP)}° a la derecha`;}
+  else {name=`Giro ${currentShot}`;desc='Sigue girando en el mismo sentido';}
+  document.getElementById('step-name').textContent=name;
+  document.getElementById('step-desc').textContent=desc;
+  document.getElementById('step-hint').textContent=currentShot===0?'Toca para tomar la primera foto':'Gira hasta que la barra esté llena';
+  document.getElementById('shot-counter').textContent=`${currentShot}/${TOTAL_SHOTS}`;
+  document.getElementById('scan-title').textContent=window._pendingRoomName||'Escaneo 360°';
+  for(let i=0;i<TOTAL_SHOTS;i++){
+    const d=document.getElementById('dot'+i);
+    if(d) d.className='dot'+(i<currentShot?' done':i===currentShot?' current':'');
+  }
+  document.getElementById('cap-btn').className='cap-btn'+(currentShot===0?'':' ready');
+  document.getElementById('gyro-fill').style.width='0%';
+}
+function startScanGyro(){
+  gyroBase=null;
+  gyroTrackHandler=e=>{
+    if(e.alpha===null)return;
+    if(gyroBase===null)gyroBase=e.alpha;
+    let diff=e.alpha-gyroBase;
+    if(diff<-180)diff+=360; if(diff>180)diff-=360;
+    diff=Math.abs(diff);
+    const pct=Math.min(100,Math.round((diff/ANGLE_STEP)*100));
+    document.getElementById('gyro-fill').style.width=pct+'%';
+    const remaining=Math.round(ANGLE_STEP-diff);
+    document.getElementById('gyro-label').textContent=
+      currentShot===0?'':
+      remaining>2?`Gira ${remaining}° más →`:remaining>0?'¡Ya casi!':'✅ Listo — toca para capturar';
+    if(currentShot>0 && diff>=(ANGLE_STEP-3)){
+      document.getElementById('cap-btn').className='cap-btn auto';
+    }
+  };
+  window.addEventListener('deviceorientation',gyroTrackHandler);
+}
+function stopScanCamera(){
+  if(activeStream){activeStream.getTracks().forEach(t=>t.stop());activeStream=null;}
+  if(gyroTrackHandler){window.removeEventListener('deviceorientation',gyroTrackHandler);gyroTrackHandler=null;}
+}
+function captureShot(){
+  const video=document.getElementById('scan-video');
+  if(!video.videoWidth)return;
+  flashEl('flash');
+  const c=document.createElement('canvas');
+  c.width=video.videoWidth;c.height=video.videoHeight;
+  c.getContext('2d').drawImage(video,0,0);
+  shots.push(c.toDataURL('image/jpeg',.85));
+  currentShot++;
+  if(currentShot>=TOTAL_SHOTS){ stopScanCamera(); showScreen('stitch-screen'); stitchPanorama(); }
+  else{ gyroBase=null; updateScanStep(); }
+}
+function cancelScan(){ stopScanCamera(); shots=[]; showScreen('capture'); }
+function flashEl(id){ const f=document.getElementById(id); f.classList.add('go'); setTimeout(()=>f.classList.remove('go'),100); }
+
+// ════════════════ MANUAL CAPTURE ════════════════
+function startManualCapture(){
+  const name=document.getElementById('room-name-input').value.trim()||`Habitación ${rooms.length+1}`;
+  window._pendingRoomName=name;
+  window._pendingSource='Captura manual';
+  closeModal('mode-modal');
+  shots=[];
+  document.getElementById('manual-thumbs').innerHTML='';
+  document.getElementById('manual-counter').textContent='0 fotos';
+  document.getElementById('manual-finish').disabled=true;
+  getCameraStream({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},audio:false})
+    .then(stream=>{
+      activeStream=stream;
+      showScreen('manual-cap');
+      setTimeout(()=>{ attachStream(document.getElementById('manual-video'), stream); }, 80);
+    })
+    .catch(err=>showCameraError(err));
+}
+function captureManualShot(){
+  const video=document.getElementById('manual-video');
+  if(!video.videoWidth)return;
+  flashEl('manual-flash');
+  const c=document.createElement('canvas');
+  c.width=video.videoWidth;c.height=video.videoHeight;
+  c.getContext('2d').drawImage(video,0,0);
+  const data=c.toDataURL('image/jpeg',.85);
+  shots.push(data);
+  document.getElementById('manual-counter').textContent=shots.length+(shots.length===1?' foto':' fotos');
+  document.getElementById('manual-thumbs').insertAdjacentHTML('beforeend',`<img src="${data}">`);
+  document.getElementById('manual-finish').disabled=shots.length<3;
+}
+function stopManualCamera(){ if(activeStream){activeStream.getTracks().forEach(t=>t.stop());activeStream=null;} }
+function cancelManual(){ stopManualCamera(); shots=[]; showScreen('capture'); }
+function finishManual(){
+  if(shots.length<3)return;
+  stopManualCamera();
+  showScreen('stitch-screen');
+  stitchPanorama();
+}
+
+// ════════════════ VIDEO SWEEP ════════════════
+function startVideoSweep(){
+  const name=document.getElementById('room-name-input').value.trim()||`Habitación ${rooms.length+1}`;
+  window._pendingRoomName=name;
+  window._pendingSource='Video panorámico';
+  closeModal('mode-modal');
+  document.getElementById('sweep-timer').textContent='00:00';
+  document.getElementById('sweep-hint').textContent='Toca grabar y gira lentamente 360° en tu lugar';
+  document.getElementById('sweep-rec-btn').classList.remove('recording');
+  document.getElementById('sweep-rec-ind').innerHTML='';
+  document.getElementById('sweep-rotator').style.transform='rotate(0deg)';
+  getCameraStream({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},audio:false})
+    .then(stream=>{
+      activeStream=stream;
+      showScreen('video-sweep');
+      setTimeout(()=>{ attachStream(document.getElementById('sweep-video'), stream); }, 80);
+      requestGyroPermission(ok=>{ if(ok) {} });
+    })
+    .catch(err=>showCameraError(err));
+}
+function stopSweepCamera(){
+  if(activeStream){activeStream.getTracks().forEach(t=>t.stop());activeStream=null;}
+  if(gyroTrackHandler){window.removeEventListener('deviceorientation',gyroTrackHandler);gyroTrackHandler=null;}
+  if(recTimerInt){clearInterval(recTimerInt);recTimerInt=null;}
+}
+function cancelSweep(){
+  if(isRecording){ mediaRecorder.onstop=null; mediaRecorder.stop(); isRecording=false; }
+  stopSweepCamera();
+  showScreen('capture');
+}
+function toggleSweep(){ isRecording?stopSweepRecording():startSweepRecording(); }
+function startSweepRecording(){
+  if(!activeStream)return;
+  recChunks=[]; recSeconds=0; sweepAngleLog=[]; sweepCumulative=0; sweepLastAlpha=null;
+  sweepStartTime=performance.now();
+  try{ mediaRecorder=new MediaRecorder(activeStream,{mimeType:'video/webm;codecs=vp8'}); }
+  catch(e){ mediaRecorder=new MediaRecorder(activeStream); }
+  mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) recChunks.push(e.data); };
+  mediaRecorder.onstop=processSweepVideo;
+  mediaRecorder.start(250);
+  isRecording=true;
+  document.getElementById('sweep-rec-btn').classList.add('recording');
+  document.getElementById('sweep-rec-ind').innerHTML='<span class="rec-dot"></span><span style="color:#fff;font-size:12px;font-weight:600">REC</span>';
+  document.getElementById('sweep-hint').textContent='Gira despacio en círculo... toca de nuevo para detener';
+  recTimerInt=setInterval(()=>{
+    recSeconds++;
+    const m=String(Math.floor(recSeconds/60)).padStart(2,'0');
+    const s=String(recSeconds%60).padStart(2,'0');
+    document.getElementById('sweep-timer').textContent=`${m}:${s}`;
+  },1000);
+  gyroTrackHandler=e=>{
+    if(e.alpha===null)return;
+    if(sweepLastAlpha===null){sweepLastAlpha=e.alpha;return;}
+    let delta=e.alpha-sweepLastAlpha;
+    if(delta>180)delta-=360; if(delta<-180)delta+=360;
+    sweepCumulative+=delta;
+    sweepLastAlpha=e.alpha;
+    const elapsed=(performance.now()-sweepStartTime)/1000;
+    sweepAngleLog.push({time:elapsed,angle:sweepCumulative});
+    document.getElementById('sweep-rotator').style.transform=`rotate(${sweepCumulative}deg)`;
+    const absAngle=Math.abs(sweepCumulative);
+    if(absAngle>=350) document.getElementById('sweep-hint').textContent='✅ Vuelta completa — toca para detener';
+  };
+  window.addEventListener('deviceorientation',gyroTrackHandler);
+}
+function stopSweepRecording(){
+  if(!isRecording)return;
+  isRecording=false;
+  clearInterval(recTimerInt);recTimerInt=null;
+  if(gyroTrackHandler){window.removeEventListener('deviceorientation',gyroTrackHandler);gyroTrackHandler=null;}
+  document.getElementById('sweep-rec-btn').classList.remove('recording');
+  document.getElementById('sweep-rec-ind').innerHTML='';
+  mediaRecorder.stop();
+}
+function processSweepVideo(){
+  stopSweepCamera();
+  showScreen('stitch-screen');
+  document.getElementById('stitch-sub').textContent='Extrayendo fotogramas del video...';
+  document.getElementById('stitch-bar').style.width='10%';
+  const blob=new Blob(recChunks,{type:'video/webm'});
+  const FRAME_COUNT=8;
+  extractFramesFromVideo(blob,sweepAngleLog,FRAME_COUNT).then(frames=>{
+    shots=frames;
+    document.getElementById('stitch-bar').style.width='40%';
+    stitchPanorama();
+  });
+}
+function extractFramesFromVideo(blob,angleLog,count){
+  return new Promise(resolve=>{
+    const vid=document.createElement('video');
+    vid.src=URL.createObjectURL(blob);
+    vid.muted=true; vid.playsInline=true;
+    const frames=[];
+    let i=0;
+    const maxAngle=angleLog.length?Math.abs(angleLog[angleLog.length-1].angle):360;
+    function pickTime(targetAngle){
+      if(!angleLog.length) return (targetAngle/360)* (vid.duration||1);
+      let best=angleLog[0];
+      for(const e of angleLog){
+        if(Math.abs(Math.abs(e.angle)-targetAngle)<Math.abs(Math.abs(best.angle)-targetAngle)) best=e;
+      }
+      return best.time;
+    }
+    function next(){
+      if(i>=count){ URL.revokeObjectURL(vid.src); resolve(frames); return; }
+      const target=(i/count)*Math.min(360,maxAngle||360);
+      let t=pickTime(target);
+      t=Math.max(0,Math.min(t,(vid.duration||1)-0.05));
+      vid.currentTime=t;
+    }
+    vid.onloadedmetadata=()=>next();
+    vid.onseeked=()=>{
+      const c=document.createElement('canvas');
+      c.width=vid.videoWidth;c.height=vid.videoHeight;
+      c.getContext('2d').drawImage(vid,0,0);
+      frames.push(c.toDataURL('image/jpeg',.85));
+      i++;
+      document.getElementById('stitch-bar').style.width=(10+Math.round((i/count)*30))+'%';
+      next();
+    };
+    vid.load();
+  });
+}
+
+// ════════════════ STITCH (generic, uses global `shots`) ════════════════
+function stitchPanorama(){
+  const W=1600,H=800;
+  const c=document.createElement('canvas');c.width=W;c.height=H;
+  const ctx=c.getContext('2d');
+  let loaded=0;
+  const total=shots.length;
+  const sliceW=Math.ceil(W/total);
+  function progress(p){
+    document.getElementById('stitch-bar').style.width=p+'%';
+    document.getElementById('stitch-sub').textContent=
+      p<60?`Alineando ${total} fotografías...`:
+      p<85?'Corrigiendo exposición...':'Generando panorama esférico...';
+  }
+  shots.forEach((src,i)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const x=i*sliceW;
+      const sx=Math.max(0,(img.width-img.width*.6)/2);
+      ctx.drawImage(img,sx,0,img.width*.6,img.height,x,0,sliceW,H);
+      loaded++;
+      progress(40+Math.round((loaded/total)*40));
+      if(loaded===total) finalizeStitch(c,ctx,W,H);
+    };
+    img.src=src;
+  });
+}
+function finalizeStitch(c,ctx,W,H){
+  setTimeout(()=>{
+    document.getElementById('stitch-bar').style.width='90%';
+    const total=shots.length;
+    const sliceW=Math.ceil(W/total);
+    for(let i=1;i<total;i++){
+      const x=i*sliceW;
+      const g=ctx.createLinearGradient(x-15,0,x+15,0);
+      g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.5,'rgba(0,0,0,.08)');g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g;ctx.fillRect(x-15,0,30,H);
+    }
+    const gt=ctx.createLinearGradient(0,0,0,H*.2);
+    gt.addColorStop(0,'rgba(0,0,0,.7)');gt.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=gt;ctx.fillRect(0,0,W,H*.2);
+    const gb=ctx.createLinearGradient(0,H*.8,0,H);
+    gb.addColorStop(0,'rgba(0,0,0,0)');gb.addColorStop(1,'rgba(0,0,0,.8)');
+    ctx.fillStyle=gb;ctx.fillRect(0,H*.8,W,H*.2);
+    document.getElementById('stitch-bar').style.width='100%';
+    const pano=c.toDataURL('image/jpeg',.78);
+    setTimeout(()=>{
+      addRoom({name:window._pendingRoomName||`Habitación ${rooms.length+1}`,pano,hotspots:[],emoji:'📸',sourceLabel:window._pendingSource||'Panorama '+shots.length+' fotos'});
+      shots=[];
+      showScreen('capture');
+    },400);
+  },600);
+}
+
+// ════════════════ VIDEO TOUR (continuous) ════════════════
+function startVideoTour(){
+  vtChunks=[];vtChapters=[];vtRecording=false;
+  document.getElementById('vt-chapters').innerHTML='';
+  document.getElementById('vt-timer').textContent='00:00';
+  document.getElementById('vt-mark-btn').disabled=true;
+  document.getElementById('vt-rec-btn').classList.remove('recording');
+  document.getElementById('vt-rec-ind').innerHTML='';
+  getCameraStream({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},audio:false})
+    .then(stream=>{
+      activeStream=stream;
+      showScreen('vt-capture');
+      setTimeout(()=>{ attachStream(document.getElementById('vt-video'), stream); }, 80);
+    })
+    .catch(err=>showCameraError(err));
+}
+function stopVtCamera(){
+  if(activeStream){activeStream.getTracks().forEach(t=>t.stop());activeStream=null;}
+  if(recTimerInt){clearInterval(recTimerInt);recTimerInt=null;}
+}
+function cancelVideoTour(){
+  if(vtRecording){ mediaRecorder.onstop=null; mediaRecorder.stop(); vtRecording=false; }
+  stopVtCamera();
+  showScreen('home');
+}
+function toggleVideoTour(){ vtRecording?stopVtRecording():startVtRecording(); }
+function startVtRecording(){
+  if(!activeStream)return;
+  vtChunks=[]; recSeconds=0; vtStartTime=performance.now();
+  try{ mediaRecorder=new MediaRecorder(activeStream,{mimeType:'video/webm;codecs=vp8'}); }
+  catch(e){ mediaRecorder=new MediaRecorder(activeStream); }
+  mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) vtChunks.push(e.data); };
+  mediaRecorder.onstop=onVtStop;
+  mediaRecorder.start(250);
+  vtRecording=true;
+  document.getElementById('vt-rec-btn').classList.add('recording');
+  document.getElementById('vt-mark-btn').disabled=false;
+  document.getElementById('vt-rec-ind').innerHTML='<span class="rec-dot"></span><span style="color:#fff;font-size:12px;font-weight:600">REC</span>';
+  recTimerInt=setInterval(()=>{
+    recSeconds++;
+    const m=String(Math.floor(recSeconds/60)).padStart(2,'0');
+    const s=String(recSeconds%60).padStart(2,'0');
+    document.getElementById('vt-timer').textContent=`${m}:${s}`;
+  },1000);
+}
+function stopVtRecording(){
+  if(!vtRecording)return;
+  vtRecording=false;
+  clearInterval(recTimerInt);recTimerInt=null;
+  document.getElementById('vt-rec-btn').classList.remove('recording');
+  document.getElementById('vt-mark-btn').disabled=true;
+  document.getElementById('vt-rec-ind').innerHTML='';
+  mediaRecorder.stop();
+}
+function markChapter(){
+  if(!vtRecording)return;
+  const elapsed=(performance.now()-vtStartTime)/1000;
+  window._pendingChapterTime=elapsed;
+  document.getElementById('vt-chapter-name').value='';
+  document.getElementById('vt-mark-input').classList.remove('hidden');
+}
+function confirmChapter(){
+  const name=document.getElementById('vt-chapter-name').value.trim()||`Habitación ${vtChapters.length+1}`;
+  vtChapters.push({time:window._pendingChapterTime,name});
+  document.getElementById('vt-mark-input').classList.add('hidden');
+  document.getElementById('vt-chapters').innerHTML=vtChapters.map(c=>{
+    const m=Math.floor(c.time/60),s=Math.floor(c.time%60);
+    return `<div class="vt-chip">${c.name} · ${m}:${String(s).padStart(2,'0')}</div>`;
+  }).join('');
+}
+function onVtStop(){
+  stopVtCamera();
+  if(vtChunks.length===0){ showScreen('home'); return; }
+  const blob=new Blob(vtChunks,{type:'video/webm'});
+  // Generate thumbnail from first frame
+  const vid=document.createElement('video');
+  vid.src=URL.createObjectURL(blob);
+  vid.muted=true; vid.playsInline=true;
+  vid.onloadeddata=()=>{
+    vid.currentTime=Math.min(0.5,(vid.duration||1)/2);
+    vid.onseeked=()=>{
+      const c=document.createElement('canvas');
+      c.width=vid.videoWidth;c.height=vid.videoHeight;
+      c.getContext('2d').drawImage(vid,0,0);
+      const thumb=c.toDataURL('image/jpeg',.7);
+      URL.revokeObjectURL(vid.src);
+      const name=prompt('Nombre del recorrido:','Mi Casa')||'Mi Casa';
+      const id=Date.now();
+      saveVideoBlob(id,blob).then(()=>{
+        const tour={id,type:'video',name,chapters:vtChapters,date:new Date().toLocaleDateString('es-CL'),thumb,duration:recSeconds};
+        tours.unshift(tour);
+        persistTours();
+        showScreen('tour-list');
+      }).catch(()=>{
+        alert('No se pudo guardar el video (puede ser muy pesado para este dispositivo).');
+        showScreen('home');
+      });
+    };
+  };
+}
+
+// ════════════════ VIDEO PLAYER (open video tour) ════════════════
+function openVideoTour(tour){
+  loadVideoBlob(tour.id).then(blob=>{
+    if(!blob){ alert('No se encontró el video guardado.'); return; }
+    const url=URL.createObjectURL(blob);
+    const vp=document.getElementById('vp-video');
+    vp.src=url;
+    document.getElementById('vp-title').textContent=tour.name;
+    document.getElementById('vp-chapters').innerHTML=tour.chapters.map((c,i)=>{
+      const m=Math.floor(c.time/60),s=Math.floor(c.time%60);
+      return `<div class="vp-pill" onclick="seekChapter(${c.time},${i})" id="vpc${i}">${c.name} · ${m}:${String(s).padStart(2,'0')}</div>`;
+    }).join('');
+    showScreen('video-player');
+  });
+}
+function seekChapter(t,i){
+  const vp=document.getElementById('vp-video');
+  vp.currentTime=t;
+  vp.play();
+  document.querySelectorAll('.vp-pill').forEach((p,j)=>p.classList.toggle('active',j===i));
+}
+
+// ════════════════ THREE.JS 360 VIEWER ════════════════
+function startViewer(roomList,startIdx,tourName){
+  currentRoomIdx=startIdx;
+  document.getElementById('viewer-tour-name').textContent=tourName||'Recorrido';
+  document.getElementById('viewer-title').textContent=roomList[startIdx]?.name||'';
+  document.getElementById('room-nav').innerHTML=roomList.map((r,i)=>
+    `<div class="npill ${i===startIdx?'active':''}" onclick="switchRoom(${i})">${r.emoji||'🏠'} ${r.name}</div>`).join('');
+  showScreen('viewer');
+  initThree(roomList[startIdx]?.pano);
+  setupGyroViewer();
+  setupViewerControls();
+  document.getElementById('gyro-hint').classList.remove('fade');
+  setTimeout(()=>document.getElementById('gyro-hint').classList.add('fade'),4000);
+}
+function initThree(panoUrl){
+  stopViewer();
+  const canvas=document.getElementById('three-canvas');
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,.1,1000);
+  const geo=new THREE.SphereGeometry(500,60,40);
+  geo.scale(-1,1,1);
+  const tex=new THREE.TextureLoader().load(panoUrl||'');
+  scene.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:tex})));
+  phi=Math.PI/2;theta=0;
+  (function render(){
+    rafId=requestAnimationFrame(render);
+    if(useGyroViewer){ camera.rotation.set(gyroPhi,gyroTheta,0,'YXZ'); }
+    else { camera.lookAt(Math.sin(phi)*Math.cos(theta)*500,Math.cos(phi)*500,Math.sin(phi)*Math.sin(theta)*500); }
+    renderer.render(scene,camera);
+  })();
+  renderHotspots();
+}
+function stopViewer(){
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  if(renderer){renderer.dispose();renderer=null;}
+  scene=null;camera=null;
+  document.getElementById('hotspots-layer').innerHTML='';
+}
+function switchRoom(i){
+  if(!currentTour)return;
+  currentRoomIdx=i;
+  const r=currentTour.rooms[i];
+  document.getElementById('viewer-title').textContent=r.name;
+  document.querySelectorAll('.npill').forEach((p,j)=>p.classList.toggle('active',j===i));
+  if(renderer&&scene&&r.pano){
+    new THREE.TextureLoader().load(r.pano,tex=>{
+      scene.children[0].material.map=tex;
+      scene.children[0].material.needsUpdate=true;
+    });
+  }
+  renderHotspots();
+}
+function renderHotspots(){
+  const layer=document.getElementById('hotspots-layer');
+  layer.innerHTML='';
+  if(!currentTour)return;
+  const room=currentTour.rooms[currentRoomIdx];
+  if(!room?.hotspots)return;
+  room.hotspots.forEach(hs=>{
+    const el=document.createElement('div');
+    el.className='hotspot';
+    el.style.left=`${Math.max(5,Math.min(95,50+(hs.yaw-180)/360*80))}%`;
+    el.style.top=`${Math.max(20,Math.min(80,60+hs.pitch/90*20))}%`;
+    el.innerHTML=`→<div class="hlabel">${hs.label}</div>`;
+    el.onclick=()=>switchRoom(hs.target);
+    layer.appendChild(el);
+  });
+}
+function setupGyroViewer(){
+  const h=e=>{
+    if(!useGyroViewer||e.alpha===null)return;
+    gyroTheta=-e.alpha*Math.PI/180;
+    gyroPhi=(e.beta-90)*Math.PI/180;
+  };
+  window._gyroViewerHandler=h;
+  requestGyroPermission(ok=>{ if(ok) window.addEventListener('deviceorientation',h); });
+}
+function toggleGyro(){
+  useGyroViewer=!useGyroViewer;
+  document.getElementById('gyro-btn').style.background=useGyroViewer?'rgba(108,99,255,.6)':'rgba(0,0,0,.4)';
+}
+function setupViewerControls(){
+  const canvas=document.getElementById('three-canvas');
+  canvas.onmousedown=e=>{isDragging=true;prevMouse={x:e.clientX,y:e.clientY};};
+  canvas.onmouseup=()=>isDragging=false;
+  canvas.onmousemove=e=>{
+    if(!isDragging||useGyroViewer)return;
+    theta-=(e.clientX-prevMouse.x)*.005;
+    phi-=(e.clientY-prevMouse.y)*.005;
+    phi=Math.max(.1,Math.min(Math.PI-.1,phi));
+    prevMouse={x:e.clientX,y:e.clientY};
+  };
+  let lt=null;
+  canvas.ontouchstart=e=>{lt={x:e.touches[0].clientX,y:e.touches[0].clientY};};
+  canvas.ontouchmove=e=>{
+    e.preventDefault();
+    if(!lt||useGyroViewer)return;
+    theta-=(e.touches[0].clientX-lt.x)*.006;
+    phi-=(e.touches[0].clientY-lt.y)*.006;
+    phi=Math.max(.1,Math.min(Math.PI-.1,phi));
+    lt={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  };
+  window.onresize=()=>{
+    if(!renderer)return;
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+  };
+}
+function toggleFullscreen(){
+  document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{});
+}
+
+// ════════════════ INIT ════════════════
+updateHomeCount();
+
+// Show HTTPS warning if running from file://
+if(location.protocol === 'file:'){
+  document.getElementById('https-warning').style.display='block';
+}
+
+function testCamera(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    alert('❌ Tu navegador no soporta acceso a cámara.\n\nUsa Chrome o Safari actualizado.');
+    return;
+  }
+  if(location.protocol === 'file:'){
+    alert('⚠️ Estás abriendo la app como archivo local (file://).\n\nLos navegadores bloquean la cámara por seguridad en archivos locales.\n\n✅ Soluciones:\n1. Sube el archivo a un servidor web (GitHub Pages, Netlify, etc.)\n2. Usa un servidor local: python3 -m http.server\n3. En Android Chrome: prueba activar "Sitios inseguros" en chrome://flags\n\nPor ahora usa "Importar foto 360°" o "Habitación demo".');
+    return;
+  }
+  getCameraStream({video:{facingMode:'environment'},audio:false})
+    .then(stream=>{
+      stream.getTracks().forEach(t=>t.stop());
+      alert('✅ ¡Cámara funcionando correctamente!\n\nYa puedes usar el escaneo.');
+    })
+    .catch(err=>showCameraError(err));
+}
+</script>
+</body>
+</html>
